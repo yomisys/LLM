@@ -1,0 +1,338 @@
+{
+  "weights": {
+    "alpha": 0.25,
+    "beta": 0.25,
+    "gamma": 0.25,
+    "delta": 0.25
+  },
+  "tau_a": 0.45,
+  "tau_c": 0.2,
+  "calibration_metrics": {
+    "tau_a": 0.45,
+    "tau_c": 0.2,
+    "coverage": 0.8235294117647058,
+    "selective_risk": 0.6428571428571429,
+    "cost": 0.73109243697479
+  },
+  "calibration_qids": [
+    "Q004",
+    "Q043",
+    "Q045",
+    "Q008",
+    "Q047",
+    "Q016",
+    "Q013",
+    "Q046",
+    "Q026",
+    "Q025",
+    "Q053",
+    "Q029",
+    "Q057",
+    "Q032",
+    "Q056",
+    "Q037",
+    "Q036"
+  ],
+  "test_qids": [
+    "Q042",
+    "Q005",
+    "Q044",
+    "Q010",
+    "Q009",
+    "Q002",
+    "Q001",
+    "Q041",
+    "Q007",
+    "Q003",
+    "Q006",
+    "Q018",
+    "Q015",
+    "Q020",
+    "Q011",
+    "Q049",
+    "Q019",
+    "Q048",
+    "Q014",
+    "Q012",
+    "Q050",
+    "Q017",
+    "Q022",
+    "Q054",
+    "Q028",
+    "Q023",
+    "Q052",
+    "Q024",
+    "Q021",
+    "Q027",
+    "Q055",
+    "Q051",
+    "Q030",
+    "Q034",
+    "Q038",
+    "Q059",
+    "Q060",
+    "Q033",
+    "Q040",
+    "Q058",
+    "Q039",
+    "Q031",
+    "Q035"
+  ],
+  "calibration_records": [
+    {
+      "qid": "Q004",
+      "type": "single_hop",
+      "answerable": true,
+      "S": 0.9178857252189321,
+      "signals": {
+        "S": 0.9178857252189321,
+        "R": 0.9946639134180106,
+        "C": 0.875,
+        "A": 0.8158420264720917,
+        "T": 0.9860369609856262
+      },
+      "shadow_answer": "The four functions that make up the Core of the NIST AI Risk Management Framework are:\n\nGOVERN, MAP, MEASURE, and MANAGE.",
+      "correct_if_answered": true
+    },
+    {
+      "qid": "Q043",
+      "type": "single_hop",
+      "answerable": true,
+      "S": 0.8810264767319999,
+      "signals": {
+        "S": 0.8810264767319999,
+        "R": 0.9875478937889248,
+        "C": 1.0,
+        "A": 0.6330282390117645,
+        "T": 0.9035297741273102
+      },
+      "shadow_answer": "Apple's total operating expenses for fiscal year 2023 were $54,847 million.",
+      "correct_if_answered": true
+    },
+    {
+      "qid": "Q045",
+      "type": "single_hop",
+      "answerable": true,
+      "S": 0.42743732201462015,
+      "signals": {
+        "S": 0.42743732201462015,
+        "R": 0.11987623257292798,
+        "C": 0.5555555555555556,
+        "A": 0.3315310522913933,
+        "T": 0.7027864476386037
+      },
+      "shadow_answer": "Based on the evidence provided:\n\n1. **Insufficient Logging** (CWE-778)\n2. **Improper Output Neutralization for Logs** (CWE-117)\n3. **Omission of Security-relevant Information** (CWE-223)\n4. **Insertion of Sensitive Information into Log File** (CWE",
+      "correct_if_answered": false
+    },
+    {
+      "qid": "Q008",
+      "type": "single_hop",
+      "answerable": true,
+      "S": 0.8726467320186493,
+      "signals": {
+        "S": 0.8726467320186493,
+        "R": 0.9540289149355227,
+        "C": 1.0,
+        "A": 0.6330282390117645,
+        "T": 0.9035297741273102
+      },
+      "shadow_answer": "Apple's research and development expense for fiscal year 2023 was $29,915 million.",
+      "correct_if_answered": false
+    },
+    {
+      "qid": "Q047",
+      "type": "multi_hop",
+      "answerable": true,
+      "S": 0.8305554123084649,
+      "signals": {
+        "S": 0.8305554123084649,
+        "R": 0.9896513220271924,
+        "C": 0.8888888888888888,
+        "A": 0.6341988921165467,
+        "T": 0.8094825462012321
+      },
+      "shadow_answer": "Apple's total gross margin percentage in fiscal 2023 was 44.1%, which was higher than the 41.8% in fiscal 2021.",
+      "correct_if_answered": true
+    },
+    {
+      "qid": "Q016",
+      "type": "multi_hop",
+      "answerable": true,
+      "S": 0.7493302380713691,
+      "signals": {
+        "S": 0.7493302380713691,
+        "R": 0.9670706651064632,
+        "C": 0.7333333333333333,
+        "A": 0.5814816355705261,
+        "T": 0.7154353182751539
+      },
+      "shadow_answer": "Using both Apple 10-K filings, Apple's Greater China net sales changed -2% from fiscal year 2020 to fiscal year 2023.",
+      "correct_if_answered": false
+    },
+    {
+      "qid": "Q013",
+      "type": "multi_hop",
+      "answerable": true,
+      "S": 0.7942984652984195,
+      "signals": {
+        "S": 0.7942984652984195,
+        "R": 0.9448529348075663,
+        "C": 0.8888888888888888,
+        "A": 0.6280167192220688,
+        "T": 0.715435318275154
+      },
+      "shadow_answer": "Apple's effective tax rate in fiscal year 2023 was lower than the statutory federal income tax rate due primarily to a lower effective tax rate on foreign earnings, the impact of the U.S. federal R&D credit, and tax benefits from share-based compensation, partially offset by state income taxes.",
+      "correct_if_answered": false
+    },
+    {
+      "qid": "Q046",
+      "type": "multi_hop",
+      "answerable": true,
+      "S": 0.6696963771948343,
+      "signals": {
+        "S": 0.6696963771948343,
+        "R": 0.8149229918897902,
+        "C": 0.5714285714285714,
+        "A": 0.5769986271858215,
+        "T": 0.715435318275154
+      },
+      "shadow_answer": "Apple Inc.'s SG&A expense decreased from $38,668 million in fiscal year 2020 to $43,887 million in fiscal year 2023, representing a change of -13%.",
+      "correct_if_answered": false
+    },
+    {
+      "qid": "Q026",
+      "type": "temporal",
+      "answerable": true,
+      "S": 0.5738312937530913,
+      "signals": {
+        "S": 0.5738312937530913,
+        "R": 0.4100746468981318,
+        "C": 0.5555555555555556,
+        "A": 0.6142596542835236,
+        "T": 0.715435318275154
+      },
+      "shadow_answer": "The most recent Apple 10-K in this corpus covers a fiscal year ending September 30, 2023. The immediately preceding fiscal year-end date was September 24, 2022.",
+      "correct_if_answered": true
+    },
+    {
+      "qid": "Q025",
+      "type": "temporal",
+      "answerable": true,
+      "S": 0.61497489285433,
+      "signals": {
+        "S": 0.61497489285433,
+        "R": 0.6588090681258226,
+        "C": 0.8571428571428571,
+        "A": 0.5527032929658889,
+        "T": 0.39124435318275147
+      },
+      "shadow_answer": "RFC 9110 is the current/more recent one; RFC 2616 is obsolete/superseded, about 23 years apart.",
+      "correct_if_answered": true
+    },
+    {
+      "qid": "Q053",
+      "type": "temporal",
+      "answerable": true,
+      "S": 0.3381475375669386,
+      "signals": {
+        "S": 0.3381475375669386,
+        "R": 0.0026207850383750575,
+        "C": 0.2222222222222222,
+        "A": 0.506359052658081,
+        "T": 0.621388090349076
+      },
+      "shadow_answer": "FY2023 10-K figure",
+      "correct_if_answered": false
+    },
+    {
+      "qid": "Q029",
+      "type": "temporal",
+      "answerable": true,
+      "S": 0.4800595760364994,
+      "signals": {
+        "S": 0.4800595760364994,
+        "R": 0.10014190967141445,
+        "C": 0.6666666666666666,
+        "A": 0.6159410214424133,
+        "T": 0.537488706365503
+      },
+      "shadow_answer": "The latest HTTP RFC in this corpus is [rfc9110_http_semantics], published in 2022. It postsdate the older RFC [rfc2616_http11] by approximately 23 years.",
+      "correct_if_answered": false
+    },
+    {
+      "qid": "Q057",
+      "type": "unanswerable",
+      "answerable": false,
+      "S": 0.44274842186051183,
+      "signals": {
+        "S": 0.44274842186051183,
+        "R": 0.00324378667332504,
+        "C": 0.6428571428571429,
+        "A": 0.4157818749547005,
+        "T": 0.7091108829568789
+      },
+      "shadow_answer": "NOT_SUPPORTED: the evidence does not contain this information.",
+      "correct_if_answered": false
+    },
+    {
+      "qid": "Q032",
+      "type": "unanswerable",
+      "answerable": false,
+      "S": 0.8757627277769139,
+      "signals": {
+        "S": 0.8757627277769139,
+        "R": 0.9749817394276107,
+        "C": 0.7777777777777778,
+        "A": 0.7642544329166412,
+        "T": 0.9860369609856262
+      },
+      "shadow_answer": "The NIST AI RMF recommends rigorous software testing and performance assessment methodologies with associated measures of uncertainty, comparisons to performance benchmarks, and formalized reporting and documentation of results for implementing the MEASURE function.",
+      "correct_if_answered": false
+    },
+    {
+      "qid": "Q056",
+      "type": "unanswerable",
+      "answerable": false,
+      "S": 0.7527214444490431,
+      "signals": {
+        "S": 0.7527214444490431,
+        "R": 0.6922043394783938,
+        "C": 0.875,
+        "A": 0.6341988921165467,
+        "T": 0.8094825462012321
+      },
+      "shadow_answer": "The company states that the total gross margin percentage for fiscal year 2019 was 38.2%.",
+      "correct_if_answered": false
+    },
+    {
+      "qid": "Q037",
+      "type": "unanswerable",
+      "answerable": false,
+      "S": 0.7110591904629935,
+      "signals": {
+        "S": 0.7110591904629935,
+        "R": 0.6627845054328063,
+        "C": 0.6666666666666666,
+        "A": 0.6112558156251907,
+        "T": 0.90352977412731
+      },
+      "shadow_answer": "Apple spent $204 million on marketing specifically for the Vision Pro headset in fiscal year 2023.",
+      "correct_if_answered": false
+    },
+    {
+      "qid": "Q036",
+      "type": "unanswerable",
+      "answerable": false,
+      "S": 0.6516737908179517,
+      "signals": {
+        "S": 0.6516737908179517,
+        "R": 0.33165480199446545,
+        "C": 0.5714285714285714,
+        "A": 0.7175748288631439,
+        "T": 0.9860369609856262
+      },
+      "shadow_answer": "Gina M. Raimondo",
+      "correct_if_answered": false
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+Calibration set: 12 questions; Test set: 28 questions
+  Q009   S=0.739  answerable=True  correct_if_answered=True
+  Q004   S=0.918  answerable=True  correct_if_answered=True
+  Q002   S=0.895  answerable=True  correct_if_answered=False
+  Q012   S=0.787  answerable=True  correct_if_answered=False
+  Q013   S=0.794  answerable=True  correct_if_answered=False
+  Q015   S=0.580  answerable=True  correct_if_answered=False
+  Q024   S=0.612  answerable=True  correct_if_answered=False
+  Q026   S=0.574  answerable=True  correct_if_answered=True
+  Q023   S=0.574  answerable=True  correct_if_answered=False
+  Q035   S=0.746  answerable=False  correct_if_answered=False
+  Q032   S=0.876  answerable=False  correct_if_answered=False
+  Q033   S=0.623  answerable=False  correct_if_answered=False
+
+Best thresholds on calibration set: {'tau_a': 0.45, 'tau_c': 0.2, 'coverage': 1.0, 'selective_risk': 0.75, 'cost': 0.75}
+
+Saved calibration to C:\Users\yomis\Downloads\ieee\results\calibration.json

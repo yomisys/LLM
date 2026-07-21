@@ -1,0 +1,146 @@
+{
+  "clean": {
+    "baseline": {
+      "n": 28,
+      "coverage": 0.6785714285714286,
+      "selective_risk": 0.6842105263157895,
+      "faithfulness": 0.8028588423707346,
+      "context_relevance": 0.1,
+      "abstention_precision": 0.4444444444444444,
+      "abstention_recall": 0.5,
+      "n_applicable": 28
+    },
+    "ecerag": {
+      "n": 28,
+      "coverage": 0.6071428571428571,
+      "selective_risk": 0.7058823529411765,
+      "faithfulness": 0.8317666053387202,
+      "context_relevance": 0.1,
+      "abstention_precision": 0.45454545454545453,
+      "abstention_recall": 0.625,
+      "n_applicable": 28
+    },
+    "ecerag_cr": {
+      "n": 28,
+      "coverage": 0.6785714285714286,
+      "selective_risk": 0.7368421052631579,
+      "faithfulness": 0.7933350328469251,
+      "context_relevance": 0.09,
+      "abstention_precision": 0.4444444444444444,
+      "abstention_recall": 0.5,
+      "n_applicable": 28
+    }
+  },
+  "irrelevant": {
+    "baseline": {
+      "n": 27,
+      "coverage": 0.7777777777777778,
+      "selective_risk": 0.8095238095238095,
+      "faithfulness": 0.7953389203389202,
+      "context_relevance": 0.1,
+      "abstention_precision": 0.5,
+      "abstention_recall": 0.42857142857142855,
+      "n_applicable": 27
+    },
+    "ecerag": {
+      "n": 27,
+      "coverage": 0.7407407407407407,
+      "selective_risk": 0.8,
+      "faithfulness": 0.8065344377844376,
+      "context_relevance": 0.1,
+      "abstention_precision": 0.5714285714285714,
+      "abstention_recall": 0.5714285714285714,
+      "n_applicable": 27
+    },
+    "ecerag_cr": {
+      "n": 27,
+      "coverage": 0.7777777777777778,
+      "selective_risk": 0.8095238095238095,
+      "faithfulness": 0.7966994645566073,
+      "context_relevance": 0.1,
+      "abstention_precision": 0.5,
+      "abstention_recall": 0.42857142857142855,
+      "n_applicable": 27
+    }
+  },
+  "contradictory": {
+    "baseline": {
+      "n": 10,
+      "coverage": 0.9,
+      "selective_risk": 0.3333333333333333,
+      "faithfulness": 0.8530796688691425,
+      "context_relevance": 0.2,
+      "abstention_precision": 0.0,
+      "abstention_recall": null,
+      "n_applicable": 10
+    },
+    "ecerag": {
+      "n": 10,
+      "coverage": 0.9,
+      "selective_risk": 0.3333333333333333,
+      "faithfulness": 0.8530796688691425,
+      "context_relevance": 0.2,
+      "abstention_precision": 0.0,
+      "abstention_recall": null,
+      "n_applicable": 10
+    },
+    "ecerag_cr": {
+      "n": 10,
+      "coverage": 0.9,
+      "selective_risk": 0.3333333333333333,
+      "faithfulness": 0.8530796688691425,
+      "context_relevance": 0.2,
+      "abstention_precision": 0.0,
+      "abstention_recall": null,
+      "n_applicable": 10
+    }
+  },
+  "counterfactual": {
+    "baseline": {
+      "n": 22,
+      "coverage": 0.7727272727272727,
+      "selective_risk": 0.8235294117647058,
+      "faithfulness": 0.8054621848739495,
+      "context_relevance": 0.058823529411764705,
+      "abstention_precision": 0.6,
+      "abstention_recall": 0.6,
+      "n_applicable": 22
+    },
+    "ecerag": {
+      "n": 22,
+      "coverage": 0.6818181818181818,
+      "selective_risk": 0.8,
+      "faithfulness": 0.8334920634920633,
+      "context_relevance": 0.058823529411764705,
+      "abstention_precision": 0.42857142857142855,
+      "abstention_recall": 0.6,
+      "n_applicable": 22
+    },
+    "ecerag_cr": {
+      "n": 22,
+      "coverage": 0.7272727272727273,
+      "selective_risk": 0.8125,
+      "faithfulness": 0.8154897186147185,
+      "context_relevance": 0.058823529411764705,
+      "abstention_precision": 0.5,
+      "abstention_recall": 0.6,
+      "n_applicable": 22
+    }
+  },
+  "risk_coverage_auc_ecerag": 0.6430400447999647,
+  "risk_coverage_curve_n_points": 40,
+  "test_n": 28,
+  "tau_a": 0.45,
+  "tau_c": 0.2,
+  "weights": {
+    "alpha": 0.25,
+    "beta": 0.25,
+    "gamma": 0.25,
+    "delta": 0.25
+  },
+  "no_op_counts_by_condition": {
+    "contradictory": 18,
+    "counterfactual": 6,
+    "irrelevant": 1
+  }
+}

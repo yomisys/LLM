@@ -1,0 +1,26 @@
+C:\Users\yomis\anaconda3\lib\site-packages\huggingface_hub\file_download.py:142: UserWarning: `huggingface_hub` cache-system uses symlinks by default to efficiently store duplicated files but your machine does not support them in C:\Users\yomis\.cache\huggingface\hub\models--Qwen--Qwen2.5-1.5B-Instruct. Caching files will still work but in a degraded version that might require more space on your disk. This warning can be disabled by setting the `HF_HUB_DISABLE_SYMLINKS_WARNING` environment variable. For more details, see https://huggingface.co/docs/huggingface_hub/how-to-cache#limitations.
+To support symlinks on Windows, you either need to activate Developer Mode or to run Python as an administrator. In order to activate developer mode, see this article: https://docs.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development
+  warnings.warn(message)
+Calibration set: 17 questions; Test set: 43 questions
+  Q004   S=0.918  answerable=True  correct_if_answered=True
+  Q043   S=0.881  answerable=True  correct_if_answered=True
+  Q045   S=0.427  answerable=True  correct_if_answered=False
+  Q008   S=0.873  answerable=True  correct_if_answered=False
+  Q047   S=0.831  answerable=True  correct_if_answered=True
+  Q016   S=0.749  answerable=True  correct_if_answered=False
+  Q013   S=0.794  answerable=True  correct_if_answered=False
+  Q046   S=0.670  answerable=True  correct_if_answered=False
+  Q026   S=0.574  answerable=True  correct_if_answered=True
+  Q025   S=0.615  answerable=True  correct_if_answered=True
+  Q053   S=0.338  answerable=True  correct_if_answered=False
+  Q029   S=0.480  answerable=True  correct_if_answered=False
+  Q057   S=0.443  answerable=False  correct_if_answered=False
+  Q032   S=0.876  answerable=False  correct_if_answered=False
+  Q056   S=0.753  answerable=False  correct_if_answered=False
+  Q037   S=0.711  answerable=False  correct_if_answered=False
+  Q036   S=0.652  answerable=False  correct_if_answered=False
+
+Best thresholds on calibration set: {'tau_a': 0.45, 'tau_c': 0.2, 'coverage': 0.8235294117647058, 'selective_risk': 0.6428571428571429, 'cost': 0.73109243697479}
+
+Saved calibration to C:\Users\yomis\Downloads\ieee\results\calibration.json
+EXIT_CODE=0

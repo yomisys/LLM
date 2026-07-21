@@ -1,0 +1,40 @@
+Running experiment on 28 held-out test questions, tau_a=0.45, tau_c=0.2, weights={'alpha': 0.25, 'beta': 0.25, 'gamma': 0.25, 'delta': 0.25}
+[1/28] Q001 (single_hop) done in 398.5s (elapsed 398s)
+[2/28] Q003 (single_hop) done in 168.8s (elapsed 567s)
+[3/28] Q005 (single_hop) done in 234.2s (elapsed 801s)
+[4/28] Q006 (single_hop) done in 209.2s (elapsed 1011s)
+[5/28] Q007 (single_hop) done in 4987.4s (elapsed 5998s)
+[6/28] Q008 (single_hop) done in 206.9s (elapsed 6205s)
+[7/28] Q010 (single_hop) done in 176.6s (elapsed 6382s)
+[8/28] Q011 (multi_hop) done in 135.9s (elapsed 6518s)
+[9/28] Q014 (multi_hop) done in 154.1s (elapsed 6672s)
+[10/28] Q016 (multi_hop) done in 179.6s (elapsed 6851s)
+[11/28] Q017 (multi_hop) done in 235.9s (elapsed 7087s)
+[12/28] Q018 (multi_hop) done in 422.5s (elapsed 7510s)
+[13/28] Q019 (multi_hop) done in 463.5s (elapsed 7973s)
+[14/28] Q020 (multi_hop) done in 355.1s (elapsed 8328s)
+[15/28] Q021 (temporal) done in 3734.8s (elapsed 12063s)
+[16/28] Q022 (temporal) done in 129.8s (elapsed 12193s)
+[17/28] Q025 (temporal) done in 977.1s (elapsed 13170s)
+[18/28] Q027 (temporal) done in 110.7s (elapsed 13281s)
+[19/28] Q028 (temporal) done in 198.9s (elapsed 13480s)
+[20/28] Q029 (temporal) done in 194.8s (elapsed 13674s)
+[21/28] Q030 (unanswerable) done in 168.1s (elapsed 13842s)
+[22/28] Q031 (unanswerable) done in 168.3s (elapsed 14011s)
+[23/28] Q034 (unanswerable) done in 170.2s (elapsed 14181s)
+[24/28] Q036 (unanswerable) done in 40.1s (elapsed 14221s)
+[25/28] Q037 (unanswerable) done in 211.1s (elapsed 14432s)
+[26/28] Q038 (unanswerable) done in 155.3s (elapsed 14587s)
+[27/28] Q039 (unanswerable) done in 329.7s (elapsed 14917s)
+[28/28] Q040 (unanswerable) done in 107.4s (elapsed 15025s)
+Traceback (most recent call last):
+  File "run_experiment.py", line 141, in <module>
+    main()
+  File "run_experiment.py", line 115, in main
+    metrics_out[condition][system] = aggregate_metrics(recs)
+  File "C:\Users\yomis\Downloads\ieee\code\ecerag\metrics.py", line 162, in aggregate_metrics
+    unanswerable = [r for r in graded_records if not r["question_answerable"]]
+  File "C:\Users\yomis\Downloads\ieee\code\ecerag\metrics.py", line 162, in <listcomp>
+    unanswerable = [r for r in graded_records if not r["question_answerable"]]
+KeyError: 'question_answerable'
+EXIT_CODE=1
