@@ -7,7 +7,20 @@ A (Agreement):  consistency across evidence chunks; penalizes same-topic chunks
                 that report conflicting numeric facts (catches contradictory injection).
 T (Trust/Temporal): penalizes evidence drawn from documents flagged obsolete/superseded
                 in DOC_META, and rewards more recently-dated sources.
+
+Extensions (used by run_full.py / analyze.py):
+G (Grounding):  NLI entailment probability of the drafted answer given the evidence.
+                R/C/A/T score the evidence only; G scores the generator's *use* of it,
+                which is the failure mode the pilot found dominant (paper Sec. VII-B).
+X (Conflict):   1.0 if two passages from the same document disagree on a figure
+                while otherwise near-identical -- a document cannot contradict itself,
+                so this is used as a hard veto on answering rather than a soft weight.
+
+Weights are either the paper's linear form {"alpha", "beta", "gamma", "delta"} or a
+fitted logistic model {"mode": "logistic", "features": [...], "coef": [...], "intercept": b}.
 """
+import math
+import os
 import re
 from datetime import date
 
@@ -25,6 +38,10 @@ according per most current currently latest recent recently compare compared tha
 NUMBER_RE = re.compile(r"\$?\d[\d,]*\.?\d*\s?%?")
 
 REFERENCE_DATE = date(2024, 1, 1)  # experiment "as-of" date
+
+NEAR_DUPLICATE_SIM = 0.9
+NLI_MODEL_NAME = os.environ.get("ECERAG_NLI_MODEL", "cross-encoder/nli-deberta-v3-base")
+CITATION_RE = re.compile(r"\[[^\]]*\]")
 
 
 def salient_terms(text: str):
@@ -60,27 +77,48 @@ def coverage_signal(query: str, evidence: list) -> float:
     return covered / len(q_terms)
 
 
-def agreement_signal(evidence: list) -> float:
-    if len(evidence) <= 1:
-        return 1.0
+def _pairwise(evidence: list):
+    """Yield (text_sim, numbers_i, numbers_j, same_doc) for every evidence pair."""
     model = get_embed_model()
     texts = [e["text"] for e in evidence]
     embs = model.encode(texts, normalize_embeddings=True)
     numbers = [extract_numbers(t) for t in texts]
-
-    pair_scores = []
     n = len(evidence)
     for i in range(n):
         for j in range(i + 1, n):
-            text_sim = float(embs[i] @ embs[j])
-            same_topic = text_sim > 0.55
-            has_numbers = numbers[i] and numbers[j]
-            conflicting = has_numbers and len(numbers[i] & numbers[j]) == 0
-            if same_topic and conflicting:
-                pair_scores.append(text_sim * 0.1)  # heavy contradiction penalty
-            else:
-                pair_scores.append(text_sim)
+            yield float(embs[i] @ embs[j]), numbers[i], numbers[j], evidence[i]["doc_id"] == evidence[j]["doc_id"]
+
+
+def _is_conflict(text_sim, nums_i, nums_j, same_doc) -> bool:
+    if not (nums_i and nums_j):
+        return False
+    # Topic-level disagreement: same-topic passages with no figures in common.
+    if text_sim > 0.55 and not (nums_i & nums_j):
+        return True
+    # Near-duplicate disagreement: the same passage restated with a different figure.
+    # The original check above can never see this case (the two copies share every
+    # other number), which is why contradictory injection left S unchanged in the pilot.
+    return same_doc and text_sim > NEAR_DUPLICATE_SIM and nums_i != nums_j
+
+
+def agreement_signal(evidence: list) -> float:
+    if len(evidence) <= 1:
+        return 1.0
+    pair_scores = []
+    for text_sim, ni, nj, same_doc in _pairwise(evidence):
+        if _is_conflict(text_sim, ni, nj, same_doc):
+            pair_scores.append(text_sim * 0.1)  # heavy contradiction penalty
+        else:
+            pair_scores.append(text_sim)
     return float(np.mean(pair_scores)) if pair_scores else 1.0
+
+
+def conflict_flag(evidence: list) -> float:
+    """1.0 if two same-document passages are near-duplicates that disagree on a figure."""
+    for text_sim, ni, nj, same_doc in _pairwise(evidence):
+        if same_doc and text_sim > NEAR_DUPLICATE_SIM and ni and nj and ni != nj:
+            return 1.0
+    return 0.0
 
 
 def _doc_trust(doc_id: str) -> float:
@@ -103,6 +141,35 @@ def trust_temporal_signal(evidence: list) -> float:
     return float(np.mean([_doc_trust(e["doc_id"]) for e in evidence]))
 
 
+_nli = None
+
+
+def _get_nli():
+    global _nli
+    if _nli is None:
+        from sentence_transformers import CrossEncoder
+        _nli = CrossEncoder(NLI_MODEL_NAME)
+    return _nli
+
+
+def grounding_signal(query: str, answer: str, evidence: list, extra_premises=()) -> float:
+    """Max NLI entailment probability of the answer over evidence passages (plus any
+    deterministic calculator output the generator was shown). A self-declined answer
+    gets 0: the generator itself judged the evidence insufficient."""
+    if not answer or "NOT_SUPPORTED" in answer or not evidence:
+        return 0.0
+    hyp = CITATION_RE.sub("", answer).strip()
+    if len(hyp.split()) < 6:  # bare values ("$29,915 million.") aren't propositions
+        hyp = f"{query} {hyp}"
+    premises = [e["text"] for e in evidence] + [p for p in extra_premises if p]
+    nli = _get_nli()
+    logits = np.asarray(nli.predict([(p, hyp) for p in premises]), dtype=np.float64)
+    probs = np.exp(logits - logits.max(axis=1, keepdims=True))
+    probs /= probs.sum(axis=1, keepdims=True)
+    labels = {v.lower(): k for k, v in nli.model.config.id2label.items()}
+    return float(probs[:, labels["entailment"]].max())
+
+
 def compute_signals(query: str, evidence: list) -> dict:
     return {
         "R": relevance_signal(evidence),
@@ -112,11 +179,19 @@ def compute_signals(query: str, evidence: list) -> dict:
     }
 
 
+LINEAR_KEYS = {"R": "alpha", "C": "beta", "A": "gamma", "T": "delta"}
+
+
+def combine(signals: dict, weights: dict) -> float:
+    if weights.get("mode") == "logistic":
+        z = weights["intercept"] + sum(c * signals[f] for f, c in zip(weights["features"], weights["coef"]))
+        return 1.0 / (1.0 + math.exp(-z))
+    return float(sum(weights[k] * signals[f] for f, k in LINEAR_KEYS.items()))
+
+
 def sufficiency_score(query: str, evidence: list, weights: dict) -> dict:
     sig = compute_signals(query, evidence)
-    s = (weights["alpha"] * sig["R"] + weights["beta"] * sig["C"]
-         + weights["gamma"] * sig["A"] + weights["delta"] * sig["T"])
-    return {"S": float(s), **sig}
+    return {"S": combine(sig, weights), **sig}
 
 
 DEFAULT_WEIGHTS = {"alpha": 0.25, "beta": 0.25, "gamma": 0.25, "delta": 0.25}

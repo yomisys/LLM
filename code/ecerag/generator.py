@@ -1,4 +1,10 @@
-"""Local small-LM generator (CPU) used for grounded answer generation and query rewriting."""
+"""Local open-weight LM generator used for grounded answer generation and query rewriting.
+
+Runs on CPU (float32) or GPU (float16/bfloat16, sharded across all visible GPUs via
+device_map="auto", so a 7B model fits on Kaggle's 2x T4). Configure with:
+  ECERAG_GENERATOR_MODEL  HF model id (default Qwen/Qwen2.5-1.5B-Instruct)
+  ECERAG_LOAD_4BIT=1      load in 4-bit via bitsandbytes (for 14B+ models on T4s)
+"""
 import os
 
 os.environ.setdefault("USE_TF", "0")
@@ -11,23 +17,34 @@ from .arithmetic import arithmetic_hint
 
 MODEL_NAME = os.environ.get("ECERAG_GENERATOR_MODEL", "Qwen/Qwen2.5-1.5B-Instruct")
 
-_tokenizer = None
-_model = None
+_loaded = {}
 
 
-def _load():
-    global _tokenizer, _model
-    if _model is None:
-        _tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-        _model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, torch_dtype=torch.float32)
-        _model.eval()
-    return _tokenizer, _model
+def load_model(name: str):
+    if name not in _loaded:
+        tok = AutoTokenizer.from_pretrained(name)
+        kwargs = {}
+        if torch.cuda.is_available():
+            kwargs["device_map"] = "auto"
+            if os.environ.get("ECERAG_LOAD_4BIT") == "1":
+                from transformers import BitsAndBytesConfig
+                kwargs["quantization_config"] = BitsAndBytesConfig(
+                    load_in_4bit=True, bnb_4bit_compute_dtype=torch.float16, bnb_4bit_quant_type="nf4")
+            else:
+                # T4/P100 have no fast bf16; fp16 is the right choice there
+                kwargs["torch_dtype"] = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+        else:
+            kwargs["torch_dtype"] = torch.float32
+        model = AutoModelForCausalLM.from_pretrained(name, **kwargs)
+        model.eval()
+        _loaded[name] = (tok, model)
+    return _loaded[name]
 
 
-def _chat(messages: list, max_new_tokens: int = 120) -> str:
-    tok, model = _load()
+def chat(messages: list, max_new_tokens: int = 120, model_name: str = MODEL_NAME) -> str:
+    tok, model = load_model(model_name)
     prompt = tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    inputs = tok(prompt, return_tensors="pt")
+    inputs = tok(prompt, return_tensors="pt").to(model.device)
     with torch.no_grad():
         out = model.generate(
             **inputs,
@@ -40,6 +57,9 @@ def _chat(messages: list, max_new_tokens: int = 120) -> str:
         )
     gen_ids = out[0][inputs["input_ids"].shape[1]:]
     return tok.decode(gen_ids, skip_special_tokens=True).strip()
+
+
+_chat = chat  # backward-compatible alias
 
 
 def format_evidence(evidence: list) -> str:
@@ -72,7 +92,7 @@ def generate_answer(query: str, evidence: list, max_new_tokens: int = 75) -> str
         {"role": "system", "content": ANSWER_SYSTEM},
         {"role": "user", "content": f"Evidence:\n{evidence_text}\n\nQuestion: {query}"},
     ]
-    return _chat(messages, max_new_tokens=max_new_tokens)
+    return chat(messages, max_new_tokens=max_new_tokens)
 
 
 REWRITE_SYSTEM = (
@@ -92,5 +112,5 @@ def rewrite_query(query: str, evidence_so_far: list, max_new_tokens: int = 48) -
             "Rewritten query:"
         )},
     ]
-    out = _chat(messages, max_new_tokens=max_new_tokens)
-    return out.splitlines()[0].strip().strip('"')
+    out = chat(messages, max_new_tokens=max_new_tokens)
+    return out.splitlines()[0].strip().strip('"') if out else query

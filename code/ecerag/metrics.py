@@ -73,6 +73,18 @@ def _keywords(text: str):
     return {w.lower() for w in words if w.lower() not in STOPWORDS and len(w) >= 4}
 
 
+def headline_number(gold_answer: str):
+    """The first figure stated in the gold answer -- the value the question asks for."""
+    text = FILING_REF_RE.sub(" ", gold_answer or "")
+    for m in NUMBER_UNIT_RE.finditer(text):
+        digits = m.group(1).replace(",", "")
+        try:
+            return round(float(digits) * UNIT_SCALE_TO_MILLIONS.get((m.group(2) or "").lower(), 1.0), 1)
+        except ValueError:
+            continue
+    return None
+
+
 def key_facts(gold_answer: str):
     return _numbers(gold_answer), _keywords(gold_answer)
 
@@ -105,6 +117,11 @@ def answer_correct(gold_answer: str, generated_text: str) -> bool:
     if gold_nums:
         num_recall = _numbers_overlap(gold_nums, gen_nums) / len(gold_nums)
         if num_recall >= 0.8:
+            return True
+        if num_recall >= 0.5 and _numbers_overlap({headline_number(gold_answer)}, gen_nums):
+            # gold answers often append context figures after the asked-for value
+            # ("$29,915 million, about 8% of total net sales"); an answer stating the
+            # headline value plus at least half the figures is correct
             return True
         # partial numeric credit only counts alongside decent keyword support
         return num_recall >= 0.5 and kw_recall(gold_kw) >= 0.5
@@ -143,6 +160,22 @@ def context_relevance(evidence: list, gold_chunk_ids: list):
     gold_set = set(gold_chunk_ids)
     hits = sum(1 for e in evidence if e["chunk_id"] in gold_set)
     return hits / len(evidence)
+
+
+def answer_in_context(evidence: list, gold_answer: str, gold_chunk_ids: list):
+    """Retrieval recall that tolerates overlapping chunks: True if any gold chunk was
+    retrieved, or if the evidence contains every gold figure. Strict chunk-id matching
+    (context_relevance) scored 0.09-0.10 in the pilot because the 40-word chunk overlap
+    makes informationally equivalent passages carry different ids."""
+    if not gold_chunk_ids or not gold_answer:
+        return None
+    if any(e["chunk_id"] in set(gold_chunk_ids) for e in evidence):
+        return True
+    gold_nums = _numbers(gold_answer)
+    if not gold_nums:
+        return False
+    ev_nums = _numbers(" ".join(e["text"] for e in evidence))
+    return _numbers_overlap(gold_nums, ev_nums) == len(gold_nums)
 
 
 def grade_record(record: dict, question: dict) -> dict:
@@ -244,4 +277,5 @@ def risk_coverage_auc(graded_records_with_scores: list) -> float:
     order = np.argsort(coverages)
     cov_sorted = np.array(coverages)[order]
     risk_sorted = np.array(risks)[order]
-    return float(np.trapz(risk_sorted, cov_sorted))
+    trapezoid = getattr(np, "trapezoid", None) or np.trapz  # trapz is deprecated in NumPy 2
+    return float(trapezoid(risk_sorted, cov_sorted))

@@ -19,6 +19,10 @@ class HybridRetriever:
         self.embeddings = embeddings  # normalized, shape (N, D)
         self.dense_weight = dense_weight
         self.bm25 = BM25Okapi([tokenize(c["text"]) for c in chunks])
+        self._index = {c["chunk_id"]: i for i, c in enumerate(chunks)}
+
+    def index_of(self, chunk_id: str) -> int:
+        return self._index[chunk_id]
 
     @staticmethod
     def _minmax(scores: np.ndarray) -> np.ndarray:

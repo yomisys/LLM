@@ -11,9 +11,11 @@ from sentence_transformers import SentenceTransformer
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 CHUNKS_PATH = ROOT / "data" / "corpus" / "chunks.jsonl"
-EMB_CACHE = ROOT / "data" / "corpus" / "embeddings.npy"
-
-EMBED_MODEL_NAME = "all-MiniLM-L6-v2"
+EMBED_MODEL_NAME = os.environ.get("ECERAG_EMBED_MODEL", "all-MiniLM-L6-v2")
+# the paper's default model keeps the original cache filename; any other model gets
+# its own cache so swapping embedders never silently reuses stale vectors
+_EMB_SUFFIX = "" if EMBED_MODEL_NAME == "all-MiniLM-L6-v2" else "_" + EMBED_MODEL_NAME.replace("/", "__")
+EMB_CACHE = ROOT / "data" / "corpus" / f"embeddings{_EMB_SUFFIX}.npy"
 
 _embed_model = None
 

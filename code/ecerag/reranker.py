@@ -6,7 +6,7 @@ os.environ.setdefault("USE_TORCH", "1")
 
 from sentence_transformers import CrossEncoder
 
-CROSS_ENCODER_NAME = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+CROSS_ENCODER_NAME = os.environ.get("ECERAG_RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
 
 _cross_encoder = None
 

@@ -1,5 +1,5 @@
 __pycache__/
 *.pyc
-data/corpus/embeddings.npy
+data/corpus/embeddings*.npy
 ~$*.docx
 *.incomplete

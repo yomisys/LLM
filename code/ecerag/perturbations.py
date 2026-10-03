@@ -15,6 +15,8 @@ import copy
 import random
 import re
 
+import numpy as np
+
 from .corpus import DOC_META
 
 NUMBER_RE = re.compile(r"\d[\d,]*")
@@ -79,7 +81,18 @@ def inject_contradictory(evidence: list, gold_chunk_ids: set, rng: random.Random
     return new_evidence, True
 
 
-def inject_counterfactual(evidence: list, chunks_by_doc: dict, rng: random.Random):
+def _nearest_counterpart(chunk: dict, candidates: list, retriever):
+    """The obsolete-version chunk most similar to `chunk` -- i.e. the same passage as it
+    read in the superseded document, which is what a stale index actually serves."""
+    idx = retriever.index_of(chunk["chunk_id"])
+    cand_idx = [retriever.index_of(c["chunk_id"]) for c in candidates]
+    sims = retriever.embeddings[cand_idx] @ retriever.embeddings[idx]
+    return candidates[int(np.argmax(sims))]
+
+
+def inject_counterfactual(evidence: list, chunks_by_doc: dict, rng: random.Random, retriever=None):
+    """With `retriever` given, substitutes the nearest obsolete counterpart passage;
+    without it, a random obsolete-document chunk (the pilot's behaviour)."""
     if not evidence:
         return evidence, False
     # doc_id (current) -> doc_id (obsolete counterpart it supersedes)
@@ -88,7 +101,10 @@ def inject_counterfactual(evidence: list, chunks_by_doc: dict, rng: random.Rando
         obsolete_doc_id = supersedes_map.get(e["doc_id"])
         if obsolete_doc_id and obsolete_doc_id in chunks_by_doc and chunks_by_doc[obsolete_doc_id]:
             candidates = chunks_by_doc[obsolete_doc_id]
-            replacement = rng.choice(candidates)
+            if retriever is not None:
+                replacement = _nearest_counterpart(e, candidates, retriever)
+            else:
+                replacement = rng.choice(candidates)
             new_evidence = copy.deepcopy(evidence)
             new_evidence[i] = {**replacement, "rerank_score": e.get("rerank_score", 0.0),
                                 "rerank_prob": e.get("rerank_prob", 0.5), "_perturbation": "counterfactual"}
