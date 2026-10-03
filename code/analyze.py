@@ -53,6 +53,10 @@ VARIANTS = {
     "fit_RCATG_veto": {"fit": True, "features": ["R", "C", "A", "T", "G"], "veto": True},
 }
 MAIN_VARIANT = "fit_RCATG_veto"
+# leave-one-signal-out: the main variant with each signal removed in turn
+for _sig in ["R", "C", "A", "T", "G"]:
+    VARIANTS[f"main_minus_{_sig}"] = {**VARIANTS[MAIN_VARIANT],
+                                      "features": [f for f in VARIANTS[MAIN_VARIANT]["features"] if f != _sig]}
 
 
 # ---------------------------------------------------------------- grading
@@ -186,6 +190,9 @@ def summarize(outs):
     aic = [o["answer_in_context"] for o in outs if o["answer_in_context"] is not None]
     m["answer_in_context"] = float(np.mean(aic)) if aic else None
     m["n_errors"] = sum(1 for o in outs if not o["declined"] and o["error"])
+    # declines that came from the generator's own NOT_SUPPORTED reply rather than the gate;
+    # both systems share the same prompt, so this is reported separately, not hidden
+    m["n_self_declined"] = sum(1 for o in outs if o["decision"] == "answer" and o["declined"])
     return m
 
 
@@ -317,6 +324,9 @@ def analyze_run(run_dir, benchmark, grader):
     errs = [not r["graded"]["correct"] for r in clean_by_qid.values()]
     result["risk_coverage_auc"] = {
         "paper_S_equal_RCAT": risk_coverage_auc(pool(lambda r: combine(r["signals"], DEFAULT_WEIGHTS))),
+        "paper_S_equal_RCAT_test_split_only": risk_coverage_auc(
+            [p for p, r in zip(pool(lambda r: combine(r["signals"], DEFAULT_WEIGHTS)), clean_by_qid.values())
+             if r["qid"] in test_ids]),
         "cv_S_main_variant_out_of_fold": risk_coverage_auc(pool(lambda r: oof_S[r["qid"]])),
         "G_alone": risk_coverage_auc(pool(lambda r: r["signals"]["G"])),
         "random_ranking_expected": float(np.mean(errs)),
@@ -347,8 +357,8 @@ def markdown_report(res):
     cv = res["cv_protocol"]
     lines += ["### Cross-validated (all questions out-of-fold, mean of "
               f"{cv['repeats']}x{cv['k_folds']}-fold)", "",
-              "| condition | system | coverage | selective risk | errors | faithfulness | abstain recall | answer-in-context |",
-              "|---|---|---|---|---|---|---|---|"]
+              "| condition | system | coverage | selective risk | errors | self-declined | faithfulness | abstain recall | answer-in-context |",
+              "|---|---|---|---|---|---|---|---|---|"]
     for cond in CONDITIONS:
         if cond not in cv["baseline"] or not cv["baseline"][cond]:
             continue
@@ -357,7 +367,7 @@ def markdown_report(res):
             rows.append((s, cv["variants"][MAIN_VARIANT][cond][s]))
         for s, m in rows:
             lines.append(f"| {cond} | {s} | {fmt(m['coverage'], True)} | {fmt(m['selective_risk'])} | "
-                         f"{fmt(m['n_errors'])} | {fmt(m['faithfulness'])} | {fmt(m['abstention_recall'])} | "
+                         f"{m['n_errors']:.1f} | {m['n_self_declined']:.1f} | {fmt(m['faithfulness'])} | {fmt(m['abstention_recall'])} | "
                          f"{fmt(m['answer_in_context'], True)} |")
     lines += ["", "### Ablation (ECERAG selective risk / coverage, clean and perturbed)", "",
               "| variant | " + " | ".join(CONDITIONS) + " |", "|---|" + "---|" * len(CONDITIONS)]
