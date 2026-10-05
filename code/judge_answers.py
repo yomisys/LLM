@@ -51,6 +51,14 @@ def judge_branch(branch: dict, q: dict):
         branch["judge_correct"] = judge(q["question"], q["gold_answer"], ans)
 
 
+def rewrite(path, rows):
+    tmp = path.with_suffix(".tmp")
+    with open(tmp, "w", encoding="utf-8") as f:
+        for row in rows:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    tmp.replace(path)
+
+
 def main():
     run_dir = Path(sys.argv[1])
     path = run_dir / "records.jsonl"
@@ -63,11 +71,20 @@ def main():
             judge_branch(rec["cr"], q)
         if i % 20 == 0:
             print(f"judged {i}/{len(records)}", flush=True)
-    tmp = path.with_suffix(".tmp")
-    with open(tmp, "w", encoding="utf-8") as f:
-        for rec in records:
-            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
-    tmp.replace(path)
+    rewrite(path, records)
+
+    # round-2 generations (augment_records.py), if present
+    aug_path = run_dir / "augment.jsonl"
+    if aug_path.exists():
+        augs = [json.loads(l) for l in open(aug_path, encoding="utf-8")]
+        for i, aug in enumerate(augs, start=1):
+            q = by_qid[aug["key"].split("|")[0]]
+            for name in ("noref", "quarantine", "cr_merged"):
+                if aug.get(name):
+                    judge_branch(aug[name], q)
+            if i % 20 == 0:
+                print(f"judged round-2 {i}/{len(augs)}", flush=True)
+        rewrite(aug_path, augs)
     json.dump({"judge_model": JUDGE_MODEL}, open(run_dir / "judge_config.json", "w"), indent=2)
     print(f"Judged with {JUDGE_MODEL}; updated {path}")
 

@@ -83,13 +83,23 @@ ANSWER_SYSTEM = (
 )
 
 
-def generate_answer(query: str, evidence: list, max_new_tokens: int = 75) -> str:
+# The same instructions without the permission to refuse: a truly unconditional baseline,
+# so the effect of ECERAG's gate is not confounded with the generator's own refusals.
+REFUSAL_CLAUSE = (
+    "If the evidence does not actually contain the specific answer, say exactly: "
+    "\"NOT_SUPPORTED: the evidence does not contain this information.\""
+)
+ANSWER_SYSTEM_NO_REFUSAL = ANSWER_SYSTEM.replace(REFUSAL_CLAUSE, "Always give your best answer.")
+assert ANSWER_SYSTEM_NO_REFUSAL != ANSWER_SYSTEM
+
+
+def generate_answer(query: str, evidence: list, max_new_tokens: int = 75, allow_refusal: bool = True) -> str:
     evidence_text = format_evidence(evidence)
     hint = arithmetic_hint(query, evidence)
     if hint:
         evidence_text = f"[computed] {hint}\n\n{evidence_text}"
     messages = [
-        {"role": "system", "content": ANSWER_SYSTEM},
+        {"role": "system", "content": ANSWER_SYSTEM if allow_refusal else ANSWER_SYSTEM_NO_REFUSAL},
         {"role": "user", "content": f"Evidence:\n{evidence_text}\n\nQuestion: {query}"},
     ]
     return chat(messages, max_new_tokens=max_new_tokens)

@@ -53,6 +53,14 @@ VARIANTS = {
     "fit_RCATG_veto": {"fit": True, "features": ["R", "C", "A", "T", "G"], "veto": True},
 }
 MAIN_VARIANT = "fit_RCATG_veto"
+# Round 2 (needs augment.jsonl): equal weights -- fitting did not beat them at n=60 --
+# with conflicts quarantined instead of refused and the merged, margin-gated CR pass.
+POLICY_FLAGS = ("quarantine", "cr_merged", "cr_margin")
+ROUND2_VARIANT = "v2_equal_RCAT"
+ROUND2_VARIANTS = {
+    ROUND2_VARIANT: {"fit": False, "features": ["R", "C", "A", "T"], "veto": True,
+                     "quarantine": True, "cr_merged": True, "cr_margin": 0.05},
+}
 # leave-one-signal-out: the main variant with each signal removed in turn
 for _sig in ["R", "C", "A", "T", "G"]:
     VARIANTS[f"main_minus_{_sig}"] = {**VARIANTS[MAIN_VARIANT],
@@ -87,6 +95,20 @@ def load_records(run_dir, by_qid, grader):
         q = by_qid[r["qid"]]
         r["graded"] = grade_branch(r, q, grader)
         r["cr"]["graded"] = grade_branch(r["cr"], q, grader)
+    aug_path = run_dir / "augment.jsonl"
+    if aug_path.exists():
+        augs = {a["key"]: a for a in map(json.loads, open(aug_path, encoding="utf-8"))}
+        for r in recs:
+            a = augs.get(f"{r['qid']}|{r['condition']}")
+            if a is None:
+                continue
+            q = by_qid[r["qid"]]
+            r["noref"] = {**a["noref"], "evidence": r["evidence"]}
+            for name in ("noref", "quarantine", "cr_merged"):
+                branch = r["noref"] if name == "noref" else a.get(name)
+                if branch:
+                    branch["graded"] = grade_branch(branch, q, grader)
+                    r[name] = branch
     return recs
 
 
@@ -114,14 +136,30 @@ def outcome(r, decision, branch, S):
 def run_system(r, system, p):
     if system == "baseline":
         return outcome(r, "answer", r, None)
+    if system == "baseline_unconditional":  # same evidence, prompt without the refusal clause
+        return outcome(r, "answer", r["noref"], None)
     S = combine(r["signals"], p["weights"])
     d = decide(S, r["signals"], p)
+    vetoed = d != "answer" and S >= p["tau_a"]  # sufficient score, blocked only by the conflict veto
+    if vetoed and p.get("quarantine") and r.get("quarantine"):
+        # answer from the evidence left after dropping both conflicting passages
+        qb = r["quarantine"]
+        Sq = combine(qb["signals"], p["weights"])
+        if decide(Sq, qb["signals"], p) == "answer":
+            o = outcome(r, "answer", qb, Sq)
+            o["quarantined"] = True
+            return o
     if system == "ecerag" or d != "clarify":
         return outcome(r, d, r, S)
-    # ECERAG+CR clarify band: one corrective retrieval pass, rescored against the original query
-    S2 = combine(r["cr"]["signals"], p["weights"])
-    d2 = "answer" if decide(S2, r["cr"]["signals"], p) == "answer" else "abstain"
-    o = outcome(r, d2, r["cr"], S2)
+    # ECERAG+CR clarify band: one corrective retrieval pass, rescored against the original query.
+    # v2 keeps the original evidence (merged + conflicts quarantined) and accepts the pass
+    # only when it scores clearly better than what it replaces.
+    branch = r.get("cr_merged") if p.get("cr_merged") else r["cr"]
+    if branch is None:
+        return outcome(r, "abstain", r, S)
+    S2 = combine(branch["signals"], p["weights"])
+    accept = decide(S2, branch["signals"], p) == "answer" and S2 >= S + p.get("cr_margin", 0.0)
+    o = outcome(r, "answer" if accept else "abstain", branch, S2)
     o["corrective_pass"] = True
     return o
 
@@ -153,17 +191,20 @@ def fit_params(train, variant):
     candidates = [0.0] + S_vals  # thresholds at observed scores: no grid floor/ceiling
     best_a, best_cost = 0.0, float("inf")  # 0.0 = answer everything, if nothing meets MIN_COVERAGE
     for ta in candidates:
-        p = {"weights": weights, "tau_a": ta, "tau_c": 0.0, "veto": variant["veto"]}
+        p = {"weights": weights, "tau_a": ta, "tau_c": 0.0, "veto": variant["veto"],
+             **{k: variant[k] for k in POLICY_FLAGS if k in variant}}
         c = cost([run_system(r, "ecerag", p) for r in train])
         if c < best_cost:
             best_a, best_cost = ta, c
     best_c, best_cost_cr = best_a, float("inf")
     for tc in [t for t in candidates if t <= best_a]:
-        p = {"weights": weights, "tau_a": best_a, "tau_c": tc, "veto": variant["veto"]}
+        p = {"weights": weights, "tau_a": best_a, "tau_c": tc, "veto": variant["veto"],
+             **{k: variant[k] for k in POLICY_FLAGS if k in variant}}
         c = cost([run_system(r, "ecerag_cr", p) for r in train])
         if c < best_cost_cr:
             best_c, best_cost_cr = tc, c
-    return {"weights": weights, "tau_a": best_a, "tau_c": best_c, "veto": variant["veto"]}
+    return {"weights": weights, "tau_a": best_a, "tau_c": best_c, "veto": variant["veto"],
+            **{k: variant[k] for k in POLICY_FLAGS if k in variant}}
 
 
 def fit_paper(train):
@@ -269,6 +310,9 @@ def analyze_run(run_dir, benchmark, grader):
         by_cond[r["condition"]].append(r)
     clean_by_qid = {r["qid"]: r for r in by_cond["clean"]}
     result = {"run_dir": str(run_dir), "grader": grader, "n_questions": len(clean_by_qid)}
+    has_round2 = all("noref" in r for r in recs)
+    variants = {**VARIANTS, **(ROUND2_VARIANTS if has_round2 else {})}
+    result["has_round2"] = has_round2
     cfg = run_dir / "run_config.json"
     if cfg.exists():
         result["run_config"] = json.load(open(cfg))
@@ -289,16 +333,16 @@ def analyze_run(run_dir, benchmark, grader):
     qids_by_type = defaultdict(list)
     for qid, r in clean_by_qid.items():
         qids_by_type[r["type"]].append(qid)
-    per_repeat = {v: defaultdict(lambda: defaultdict(list)) for v in VARIANTS}
-    main_outs_by_repeat = defaultdict(list)  # cond -> [ECERAG outcomes of each repeat]
+    per_repeat = {v: defaultdict(lambda: defaultdict(list)) for v in variants}
+    outs_by_repeat = {v: defaultdict(list) for v in variants}  # variant -> cond -> [ECERAG outcomes per repeat]
     oof_S = defaultdict(list)
     fold_params = []
     for rep in range(REPEATS):
         fold_of = stratified_folds(qids_by_type, K_FOLDS, seed=rep)
-        rep_outs = {v: defaultdict(lambda: defaultdict(list)) for v in VARIANTS}
+        rep_outs = {v: defaultdict(lambda: defaultdict(list)) for v in variants}
         for fold in range(K_FOLDS):
             train = [r for qid, r in clean_by_qid.items() if fold_of[qid] != fold]
-            for vname, variant in VARIANTS.items():
+            for vname, variant in variants.items():
                 p = fit_params(train, variant)
                 if rep == 0 and vname == MAIN_VARIANT:
                     fold_params.append(p)
@@ -310,18 +354,19 @@ def analyze_run(run_dir, benchmark, grader):
                             rep_outs[vname][cond][s].append(run_system(r, s, p))
                         if vname == MAIN_VARIANT and cond == "clean":
                             oof_S[r["qid"]].append(combine(r["signals"], p["weights"]))
-        for vname in VARIANTS:
+        for vname in variants:
             for cond in CONDITIONS:
                 for s in ("ecerag", "ecerag_cr"):
                     per_repeat[vname][cond][s].append(summarize(rep_outs[vname][cond][s]))
-        for cond in CONDITIONS:
-            main_outs_by_repeat[cond].append(rep_outs[MAIN_VARIANT][cond]["ecerag"])
+        for vname in variants:
+            for cond in CONDITIONS:
+                outs_by_repeat[vname][cond].append(rep_outs[vname][cond]["ecerag"])
 
     cv = {"k_folds": K_FOLDS, "repeats": REPEATS, "main_variant": MAIN_VARIANT,
           "example_fold_params": fold_params, "baseline": {}, "variants": {}}
     for cond in CONDITIONS:
         cv["baseline"][cond] = summarize([run_system(r, "baseline", None) for r in by_cond[cond]])
-    for vname in VARIANTS:
+    for vname in variants:
         cv["variants"][vname] = {cond: {s: mean_metrics(per_repeat[vname][cond][s])
                                         for s in ("ecerag", "ecerag_cr")}
                                  for cond in CONDITIONS if by_cond[cond]}
@@ -329,7 +374,17 @@ def analyze_run(run_dir, benchmark, grader):
     for cond in CONDITIONS:
         if by_cond[cond]:
             base = [run_system(r, "baseline", None) for r in by_cond[cond]]
-            cv["bootstrap_baseline_vs_main"][cond] = bootstrap_ci(base, main_outs_by_repeat[cond])
+            cv["bootstrap_baseline_vs_main"][cond] = bootstrap_ci(base, outs_by_repeat[MAIN_VARIANT][cond])
+    if has_round2:
+        # the reviewers' requested comparison: the gate vs a baseline that never refuses
+        cv["baseline_unconditional"] = {}
+        cv["bootstrap_unconditional_vs_round2"] = {}
+        for cond in CONDITIONS:
+            if by_cond[cond]:
+                base_u = [run_system(r, "baseline_unconditional", None) for r in by_cond[cond]]
+                cv["baseline_unconditional"][cond] = summarize(base_u)
+                cv["bootstrap_unconditional_vs_round2"][cond] = bootstrap_ci(
+                    base_u, outs_by_repeat[ROUND2_VARIANT][cond])
     result["cv_protocol"] = cv
 
     # --- risk-coverage AUC (lower is better) for the score used as a selective-prediction ranking
@@ -412,6 +467,23 @@ def markdown_report(res):
             m = cv["variants"][vname].get(c, {}).get("ecerag")
             cells.append(f"{fmt(m['selective_risk'])} / {fmt(m['coverage'], True)}" if m else "–")
         lines.append(f"| {vname} | " + " | ".join(cells) + " |")
+    if res.get("has_round2"):
+        u, v2 = cv["baseline_unconditional"], cv["variants"][ROUND2_VARIANT]
+        lines += ["", "### Round 2: unconditional baseline vs ECERAG v2 (equal weights, conflict quarantine, merged CR)", "",
+                  "| condition | system | coverage | selective risk | errors | self-declined | abstain recall |",
+                  "|---|---|---|---|---|---|---|"]
+        for cond in CONDITIONS:
+            if cond not in u:
+                continue
+            for name, m in (("baseline (refusal prompt)", cv["baseline"][cond]), ("baseline (unconditional)", u[cond]),
+                            ("ECERAG v2", v2[cond]["ecerag"]), ("ECERAG+CR v2", v2[cond]["ecerag_cr"])):
+                lines.append(f"| {cond} | {name} | {fmt(m['coverage'], True)} | {fmt(m['selective_risk'])} | "
+                             f"{m['n_errors']:.1f} | {m['n_self_declined']:.1f} | {fmt(m['abstention_recall'])} |")
+        lines += ["", "| condition | unconditional | ECERAG v2 | v2 − unconditional | P(v2 not better) |",
+                  "|---|---|---|---|---|"]
+        for cond, b in cv["bootstrap_unconditional_vs_round2"].items():
+            f2 = lambda ci: f"[{ci[0]:.2f}, {ci[1]:.2f}]" if ci else "–"
+            lines.append(f"| {cond} | {f2(b['a'])} | {f2(b['b'])} | {f2(b['b_minus_a'])} | {b['p_b_not_better']:.2f} |")
     lines += ["", "### Paired bootstrap, baseline vs ECERAG (selective risk, 95% CI)", "",
               "| condition | baseline | ECERAG | ECERAG − baseline | P(ECERAG not better) |", "|---|---|---|---|---|"]
     for cond, b in cv["bootstrap_baseline_vs_main"].items():

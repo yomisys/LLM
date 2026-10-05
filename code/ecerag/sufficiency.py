@@ -113,12 +113,26 @@ def agreement_signal(evidence: list) -> float:
     return float(np.mean(pair_scores)) if pair_scores else 1.0
 
 
+def conflict_pairs(evidence: list):
+    """Index pairs (i, j) of same-document near-duplicate passages that disagree on a figure."""
+    pairs = []
+    pair_idx = [(i, j) for i in range(len(evidence)) for j in range(i + 1, len(evidence))]
+    for (i, j), (text_sim, ni, nj, same_doc) in zip(pair_idx, _pairwise(evidence)):
+        if same_doc and text_sim > NEAR_DUPLICATE_SIM and ni and nj and ni != nj:
+            pairs.append((i, j))
+    return pairs
+
+
 def conflict_flag(evidence: list) -> float:
     """1.0 if two same-document passages are near-duplicates that disagree on a figure."""
-    for text_sim, ni, nj, same_doc in _pairwise(evidence):
-        if same_doc and text_sim > NEAR_DUPLICATE_SIM and ni and nj and ni != nj:
-            return 1.0
-    return 0.0
+    return 1.0 if conflict_pairs(evidence) else 0.0
+
+
+def quarantine_conflicts(evidence: list) -> list:
+    """Drop BOTH passages of every conflicting pair. Neither copy can be trusted over the
+    other (same source, same rank), so the answer must come from the remaining evidence."""
+    bad = {k for pair in conflict_pairs(evidence) for k in pair}
+    return [e for k, e in enumerate(evidence) if k not in bad]
 
 
 def _doc_trust(doc_id: str) -> float:
