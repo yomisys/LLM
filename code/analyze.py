@@ -55,11 +55,15 @@ VARIANTS = {
 MAIN_VARIANT = "fit_RCATG_veto"
 # Round 2 (needs augment.jsonl): equal weights -- fitting did not beat them at n=60 --
 # with conflicts quarantined instead of refused and the merged, margin-gated CR pass.
-POLICY_FLAGS = ("quarantine", "cr_merged", "cr_margin")
+POLICY_FLAGS = ("quarantine", "cr_merged", "cr_margin", "noref_answers")
 ROUND2_VARIANT = "v2_equal_RCAT"
 ROUND2_VARIANTS = {
     ROUND2_VARIANT: {"fit": False, "features": ["R", "C", "A", "T"], "veto": True,
                      "quarantine": True, "cr_merged": True, "cr_margin": 0.05},
+    # isolates the paper's mechanism: R/C/A/T gate (+ conflict veto) over answers from the
+    # no-refusal prompt, compared against the unconditional baseline on the same answers
+    "gate_only_equal_RCAT": {"fit": False, "features": ["R", "C", "A", "T"], "veto": True,
+                             "noref_answers": True},
 }
 # leave-one-signal-out: the main variant with each signal removed in turn
 for _sig in ["R", "C", "A", "T", "G"]:
@@ -140,6 +144,9 @@ def run_system(r, system, p):
         return outcome(r, "answer", r["noref"], None)
     S = combine(r["signals"], p["weights"])
     d = decide(S, r["signals"], p)
+    if p.get("noref_answers"):
+        # the evidence gate alone: the generator may not refuse, so every decline is the gate's
+        return outcome(r, d, r["noref"], S)
     vetoed = d != "answer" and S >= p["tau_a"]  # sufficient score, blocked only by the conflict veto
     if vetoed and p.get("quarantine") and r.get("quarantine"):
         # answer from the evidence left after dropping both conflicting passages
@@ -385,6 +392,10 @@ def analyze_run(run_dir, benchmark, grader):
                 cv["baseline_unconditional"][cond] = summarize(base_u)
                 cv["bootstrap_unconditional_vs_round2"][cond] = bootstrap_ci(
                     base_u, outs_by_repeat[ROUND2_VARIANT][cond])
+        cv["bootstrap_unconditional_vs_gate_only"] = {
+            cond: bootstrap_ci([run_system(r, "baseline_unconditional", None) for r in by_cond[cond]],
+                               outs_by_repeat["gate_only_equal_RCAT"][cond])
+            for cond in CONDITIONS if by_cond[cond]}
     result["cv_protocol"] = cv
 
     # --- risk-coverage AUC (lower is better) for the score used as a selective-prediction ranking
@@ -475,7 +486,9 @@ def markdown_report(res):
         for cond in CONDITIONS:
             if cond not in u:
                 continue
+            g = cv["variants"]["gate_only_equal_RCAT"][cond]["ecerag"]
             for name, m in (("baseline (refusal prompt)", cv["baseline"][cond]), ("baseline (unconditional)", u[cond]),
+                            ("evidence gate only (unconditional answers)", g),
                             ("ECERAG v2", v2[cond]["ecerag"]), ("ECERAG+CR v2", v2[cond]["ecerag_cr"])):
                 lines.append(f"| {cond} | {name} | {fmt(m['coverage'], True)} | {fmt(m['selective_risk'])} | "
                              f"{m['n_errors']:.1f} | {m['n_self_declined']:.1f} | {fmt(m['abstention_recall'])} |")
@@ -483,6 +496,10 @@ def markdown_report(res):
                   "|---|---|---|---|---|"]
         for cond, b in cv["bootstrap_unconditional_vs_round2"].items():
             f2 = lambda ci: f"[{ci[0]:.2f}, {ci[1]:.2f}]" if ci else "–"
+            lines.append(f"| {cond} | {f2(b['a'])} | {f2(b['b'])} | {f2(b['b_minus_a'])} | {b['p_b_not_better']:.2f} |")
+        lines += ["", "| condition | unconditional | gate only | gate − unconditional | P(gate not better) |",
+                  "|---|---|---|---|---|"]
+        for cond, b in cv["bootstrap_unconditional_vs_gate_only"].items():
             lines.append(f"| {cond} | {f2(b['a'])} | {f2(b['b'])} | {f2(b['b_minus_a'])} | {b['p_b_not_better']:.2f} |")
     lines += ["", "### Paired bootstrap, baseline vs ECERAG (selective risk, 95% CI)", "",
               "| condition | baseline | ECERAG | ECERAG − baseline | P(ECERAG not better) |", "|---|---|---|---|---|"]

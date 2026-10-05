@@ -12,7 +12,7 @@
 | irrelevant | ecerag_cr | 45% | 0.11 | 2.9 | 8.1 | 0.75 | 1.00 | 78% |
 | contradictory | baseline | 88% | 0.14 | 3.0 | 3.0 | 0.71 | – | 100% |
 | contradictory | ecerag | 0% | 0.00 | 0.0 | 0.0 | – | – | 100% |
-| contradictory | ecerag_cr | 63% | 0.10 | 1.6 | 1.6 | 0.75 | – | 92% |
+| contradictory | ecerag_cr | 36% | 0.06 | 0.6 | 1.1 | 0.76 | – | 92% |
 | counterfactual | baseline | 54% | 0.36 | 9.0 | 21.0 | 0.69 | 1.00 | 65% |
 | counterfactual | ecerag | 41% | 0.29 | 5.5 | 8.8 | 0.69 | 1.00 | 65% |
 | counterfactual | ecerag_cr | 44% | 0.27 | 5.5 | 8.8 | 0.70 | 1.00 | 69% |
@@ -31,6 +31,45 @@
 | main_minus_A | 0.11 / 38% | 0.10 / 41% | 0.00 / 0% | 0.30 / 40% |
 | main_minus_T | 0.10 / 39% | 0.10 / 42% | 0.00 / 0% | 0.29 / 41% |
 | main_minus_G | 0.12 / 41% | 0.13 / 42% | 0.00 / 0% | 0.33 / 44% |
+
+### Round 2: unconditional baseline vs ECERAG v2 (equal weights, conflict quarantine, merged CR)
+
+| condition | system | coverage | selective risk | errors | self-declined | abstain recall |
+|---|---|---|---|---|---|---|
+| clean | baseline (refusal prompt) | 52% | 0.13 | 4.0 | 29.0 | 1.00 |
+| clean | baseline (unconditional) | 100% | 0.43 | 26.0 | 0.0 | 0.00 |
+| clean | evidence gate only (unconditional answers) | 83% | 0.38 | 18.9 | 0.0 | 0.28 |
+| clean | ECERAG v2 | 41% | 0.13 | 3.1 | 14.8 | 1.00 |
+| clean | ECERAG+CR v2 | 41% | 0.13 | 3.1 | 14.8 | 1.00 |
+| irrelevant | baseline (refusal prompt) | 58% | 0.16 | 5.0 | 23.0 | 1.00 |
+| irrelevant | baseline (unconditional) | 100% | 0.47 | 26.0 | 0.0 | 0.00 |
+| irrelevant | evidence gate only (unconditional answers) | 86% | 0.45 | 21.1 | 0.0 | 0.23 |
+| irrelevant | ECERAG v2 | 41% | 0.14 | 3.1 | 12.8 | 1.00 |
+| irrelevant | ECERAG+CR v2 | 41% | 0.14 | 3.1 | 12.8 | 1.00 |
+| contradictory | baseline (refusal prompt) | 88% | 0.14 | 3.0 | 3.0 | – |
+| contradictory | baseline (unconditional) | 100% | 0.20 | 5.0 | 0.0 | – |
+| contradictory | evidence gate only (unconditional answers) | 0% | 0.00 | 0.0 | 0.0 | – |
+| contradictory | ECERAG v2 | 38% | 0.27 | 2.6 | 8.2 | – |
+| contradictory | ECERAG+CR v2 | 38% | 0.27 | 2.6 | 8.9 | – |
+| counterfactual | baseline (refusal prompt) | 54% | 0.36 | 9.0 | 21.0 | 1.00 |
+| counterfactual | baseline (unconditional) | 100% | 0.63 | 29.0 | 0.0 | 0.00 |
+| counterfactual | evidence gate only (unconditional answers) | 88% | 0.60 | 24.1 | 0.0 | 0.25 |
+| counterfactual | ECERAG v2 | 43% | 0.34 | 6.8 | 12.2 | 1.00 |
+| counterfactual | ECERAG+CR v2 | 43% | 0.34 | 6.8 | 12.2 | 1.00 |
+
+| condition | unconditional | ECERAG v2 | v2 − unconditional | P(v2 not better) |
+|---|---|---|---|---|
+| clean | [0.30, 0.57] | [0.02, 0.27] | [-0.45, -0.16] | 0.00 |
+| irrelevant | [0.35, 0.60] | [0.03, 0.27] | [-0.47, -0.21] | 0.00 |
+| contradictory | [0.04, 0.36] | [0.01, 0.59] | [-0.20, 0.39] | 0.69 |
+| counterfactual | [0.48, 0.76] | [0.15, 0.55] | [-0.47, -0.11] | 0.00 |
+
+| condition | unconditional | gate only | gate − unconditional | P(gate not better) |
+|---|---|---|---|---|
+| clean | [0.30, 0.57] | [0.25, 0.51] | [-0.11, -0.01] | 0.01 |
+| irrelevant | [0.35, 0.60] | [0.31, 0.58] | [-0.07, 0.01] | 0.09 |
+| contradictory | [0.04, 0.36] | – | – | nan |
+| counterfactual | [0.48, 0.76] | [0.45, 0.75] | [-0.07, -0.01] | 0.01 |
 
 ### Paired bootstrap, baseline vs ECERAG (selective risk, 95% CI)
 

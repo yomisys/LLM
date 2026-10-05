@@ -2,6 +2,7 @@
   "run_dir": "results\\kaggle\\Qwen2.5-1.5B-Instruct",
   "grader": "judge",
   "n_questions": 60,
+  "has_round2": false,
   "run_config": {
     "generator": "Qwen/Qwen2.5-1.5B-Instruct",
     "counterfactual": "nearest",
@@ -734,14 +735,14 @@
           },
           "ecerag_cr": {
             "n": 25.0,
-            "coverage": 0.34600000000000003,
-            "selective_risk": 0.004545454545454545,
-            "faithfulness": 0.9632993364955087,
+            "coverage": 0.19600000000000004,
+            "selective_risk": 0.0,
+            "faithfulness": 0.9794632034632034,
             "context_relevance": 0.18560000000000004,
             "abstention_precision": 0.0,
             "abstention_recall": null,
             "answer_in_context": 0.9240000000000002,
-            "n_errors": 0.05,
+            "n_errors": 0.0,
             "n_self_declined": 0.0
           }
         },
@@ -840,9 +841,9 @@
           },
           "ecerag_cr": {
             "n": 25.0,
-            "coverage": 0.34,
-            "selective_risk": 0.005,
-            "faithfulness": 0.9651753246753246,
+            "coverage": 0.25000000000000006,
+            "selective_risk": 0.007142857142857143,
+            "faithfulness": 0.9575541125541125,
             "context_relevance": 0.18520000000000006,
             "abstention_precision": 0.0,
             "abstention_recall": null,
@@ -946,14 +947,14 @@
           },
           "ecerag_cr": {
             "n": 25.0,
-            "coverage": 0.39,
-            "selective_risk": 0.12347152847152847,
-            "faithfulness": 0.9293702522889123,
+            "coverage": 0.14400000000000004,
+            "selective_risk": 0.1088095238095238,
+            "faithfulness": 0.938267316017316,
             "context_relevance": 0.19080000000000005,
             "abstention_precision": 0.0,
             "abstention_recall": null,
             "answer_in_context": 0.9280000000000002,
-            "n_errors": 1.25,
+            "n_errors": 0.4,
             "n_self_declined": 0.0
           }
         },
@@ -1052,9 +1053,9 @@
           },
           "ecerag_cr": {
             "n": 25.0,
-            "coverage": 0.34,
-            "selective_risk": 0.026111111111111106,
-            "faithfulness": 0.968654761904762,
+            "coverage": 0.13000000000000003,
+            "selective_risk": 0.07083333333333333,
+            "faithfulness": 0.9889545454545455,
             "context_relevance": 0.18600000000000005,
             "abstention_precision": 0.0,
             "abstention_recall": null,
@@ -1158,9 +1159,9 @@
           },
           "ecerag_cr": {
             "n": 25.0,
-            "coverage": 0.36000000000000004,
-            "selective_risk": 0.005,
-            "faithfulness": 0.9676767676767677,
+            "coverage": 0.21400000000000005,
+            "selective_risk": 0.01,
+            "faithfulness": 0.9872943722943722,
             "context_relevance": 0.18520000000000006,
             "abstention_precision": 0.0,
             "abstention_recall": null,
@@ -1264,14 +1265,14 @@
           },
           "ecerag_cr": {
             "n": 25.0,
-            "coverage": 0.354,
-            "selective_risk": 0.03162878787878788,
-            "faithfulness": 0.9570894414928505,
+            "coverage": 0.18200000000000002,
+            "selective_risk": 0.03833333333333334,
+            "faithfulness": 0.9640800865800866,
             "context_relevance": 0.19680000000000006,
             "abstention_precision": 0.0,
             "abstention_recall": null,
             "answer_in_context": 0.9500000000000002,
-            "n_errors": 0.3,
+            "n_errors": 0.2,
             "n_self_declined": 0.0
           }
         },

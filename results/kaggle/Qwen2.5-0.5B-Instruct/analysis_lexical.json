@@ -2,6 +2,7 @@
   "run_dir": "results\\kaggle\\Qwen2.5-0.5B-Instruct",
   "grader": "lexical",
   "n_questions": 60,
+  "has_round2": false,
   "run_config": {
     "generator": "Qwen/Qwen2.5-0.5B-Instruct",
     "counterfactual": "nearest",
@@ -734,15 +735,15 @@
           },
           "ecerag_cr": {
             "n": 25.0,
-            "coverage": 0.5720000000000001,
-            "selective_risk": 0.37763278388278393,
-            "faithfulness": 0.8415276543145198,
+            "coverage": 0.36400000000000005,
+            "selective_risk": 0.32641594516594513,
+            "faithfulness": 0.8275670671920672,
             "context_relevance": 0.15640000000000004,
             "abstention_precision": 0.0,
             "abstention_recall": null,
             "answer_in_context": 0.7600000000000001,
-            "n_errors": 5.4,
-            "n_self_declined": 3.25
+            "n_errors": 2.95,
+            "n_self_declined": 1.0
           }
         },
         "counterfactual": {
@@ -840,15 +841,15 @@
           },
           "ecerag_cr": {
             "n": 25.0,
-            "coverage": 0.526,
-            "selective_risk": 0.337774309024309,
-            "faithfulness": 0.8526292555769788,
+            "coverage": 0.37000000000000005,
+            "selective_risk": 0.29422799422799417,
+            "faithfulness": 0.8396313993122149,
             "context_relevance": 0.15240000000000004,
             "abstention_precision": 0.0,
             "abstention_recall": null,
             "answer_in_context": 0.7500000000000001,
-            "n_errors": 4.45,
-            "n_self_declined": 2.35
+            "n_errors": 2.7,
+            "n_self_declined": 0.35
           }
         },
         "counterfactual": {
@@ -946,15 +947,15 @@
           },
           "ecerag_cr": {
             "n": 25.0,
-            "coverage": 0.636,
-            "selective_risk": 0.41313388817065294,
-            "faithfulness": 0.8241999636656813,
+            "coverage": 0.398,
+            "selective_risk": 0.3216341991341991,
+            "faithfulness": 0.8062522616272616,
             "context_relevance": 0.15000000000000005,
             "abstention_precision": 0.0,
             "abstention_recall": null,
             "answer_in_context": 0.7280000000000001,
-            "n_errors": 6.55,
-            "n_self_declined": 5.4
+            "n_errors": 3.2,
+            "n_self_declined": 2.8
           }
         },
         "counterfactual": {
@@ -1052,15 +1053,15 @@
           },
           "ecerag_cr": {
             "n": 25.0,
-            "coverage": 0.5700000000000001,
-            "selective_risk": 0.37503663003663,
-            "faithfulness": 0.8449577089412657,
+            "coverage": 0.4000000000000001,
+            "selective_risk": 0.2824116161616161,
+            "faithfulness": 0.8449093631784137,
             "context_relevance": 0.15880000000000005,
             "abstention_precision": 0.0,
             "abstention_recall": null,
             "answer_in_context": 0.7700000000000001,
-            "n_errors": 5.35,
-            "n_self_declined": 3.35
+            "n_errors": 2.8,
+            "n_self_declined": 1.1
           }
         },
         "counterfactual": {
@@ -1158,15 +1159,15 @@
           },
           "ecerag_cr": {
             "n": 25.0,
-            "coverage": 0.5680000000000002,
-            "selective_risk": 0.3808322559793148,
-            "faithfulness": 0.8395855935503984,
+            "coverage": 0.24400000000000005,
+            "selective_risk": 0.5351190476190475,
+            "faithfulness": 0.7483508178912591,
             "context_relevance": 0.15320000000000006,
             "abstention_precision": 0.0,
             "abstention_recall": null,
             "answer_in_context": 0.744,
-            "n_errors": 5.45,
-            "n_self_declined": 3.6
+            "n_errors": 3.2,
+            "n_self_declined": 1.45
           }
         },
         "counterfactual": {
@@ -1264,15 +1265,15 @@
           },
           "ecerag_cr": {
             "n": 25.0,
-            "coverage": 0.406,
-            "selective_risk": 0.24810592185592184,
-            "faithfulness": 0.8932974526709344,
+            "coverage": 0.2700000000000001,
+            "selective_risk": 0.28724206349206344,
+            "faithfulness": 0.9155947338337045,
             "context_relevance": 0.17000000000000007,
             "abstention_precision": 0.0,
             "abstention_recall": null,
             "answer_in_context": 0.796,
-            "n_errors": 2.6,
-            "n_self_declined": 2.9
+            "n_errors": 2.0,
+            "n_self_declined": 2.2
           }
         },
         "counterfactual": {
