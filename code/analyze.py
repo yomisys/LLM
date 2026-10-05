@@ -222,18 +222,20 @@ def selective_risk(outs):
     return sum(o["error"] for o in answered) / len(answered) if answered else float("nan")
 
 
-def bootstrap_ci(outs_a, outs_b, seed=0):
+def bootstrap_ci(outs_a, outs_b_by_repeat, seed=0):
     """95% CI for selective risk of a, of b, and the paired difference b - a,
-    resampling questions with replacement."""
+    resampling questions with replacement. b is a cross-validated system, so within
+    each resample its risk is averaged over all CV repeats -- a single repeat's fold
+    assignment is luck of the split and can sit at either end of the range."""
     by_q_a = {o["qid"]: o for o in outs_a}
-    by_q_b = {o["qid"]: o for o in outs_b}
-    qids = sorted(set(by_q_a) & set(by_q_b))
+    by_q_b = [{o["qid"]: o for o in outs} for outs in outs_b_by_repeat]
+    qids = sorted(set(by_q_a).intersection(*by_q_b))
     rng = np.random.default_rng(seed)
     ra, rb, diff = [], [], []
     for _ in range(N_BOOT):
         sample = rng.choice(qids, size=len(qids), replace=True)
         a = selective_risk([by_q_a[q] for q in sample])
-        b = selective_risk([by_q_b[q] for q in sample])
+        b = float(np.nanmean([selective_risk([bq[q] for q in sample]) for bq in by_q_b]))
         ra.append(a), rb.append(b), diff.append(b - a)
 
     def ci(v):
@@ -242,6 +244,19 @@ def bootstrap_ci(outs_a, outs_b, seed=0):
         return [float(np.percentile(v, 2.5)), float(np.percentile(v, 97.5))] if len(v) else None
     return {"a": ci(ra), "b": ci(rb), "b_minus_a": ci(diff),
             "p_b_not_better": float(np.mean(np.array(diff)[~np.isnan(diff)] >= 0))}
+
+
+def auc_gain_ci(points, seed=0):
+    """95% bootstrap CI (over questions) for how much lower the risk-coverage AUC of a
+    ranking is than a random ranking's (whose expected AUC is the overall error rate).
+    A CI above 0 means the score ranks wrong answers below right ones better than chance."""
+    rng = np.random.default_rng(seed)
+    gains = []
+    for _ in range(N_BOOT):
+        sample = [points[i] for i in rng.integers(0, len(points), len(points))]
+        err = np.mean([(not p["question_answerable"]) or (not p["correct_if_answered"]) for p in sample])
+        gains.append(err - risk_coverage_auc(sample))
+    return [float(np.percentile(gains, 2.5)), float(np.percentile(gains, 97.5))] if points else None
 
 
 # ---------------------------------------------------------------- main analysis
@@ -275,8 +290,8 @@ def analyze_run(run_dir, benchmark, grader):
     for qid, r in clean_by_qid.items():
         qids_by_type[r["type"]].append(qid)
     per_repeat = {v: defaultdict(lambda: defaultdict(list)) for v in VARIANTS}
-    first_repeat_outs = {}
-    oof_S = {}
+    main_outs_by_repeat = defaultdict(list)  # cond -> [ECERAG outcomes of each repeat]
+    oof_S = defaultdict(list)
     fold_params = []
     for rep in range(REPEATS):
         fold_of = stratified_folds(qids_by_type, K_FOLDS, seed=rep)
@@ -293,14 +308,14 @@ def analyze_run(run_dir, benchmark, grader):
                             continue
                         for s in ("ecerag", "ecerag_cr"):
                             rep_outs[vname][cond][s].append(run_system(r, s, p))
-                        if rep == 0 and vname == MAIN_VARIANT and cond == "clean":
-                            oof_S[r["qid"]] = combine(r["signals"], p["weights"])
+                        if vname == MAIN_VARIANT and cond == "clean":
+                            oof_S[r["qid"]].append(combine(r["signals"], p["weights"]))
         for vname in VARIANTS:
             for cond in CONDITIONS:
                 for s in ("ecerag", "ecerag_cr"):
                     per_repeat[vname][cond][s].append(summarize(rep_outs[vname][cond][s]))
-        if rep == 0:
-            first_repeat_outs = rep_outs
+        for cond in CONDITIONS:
+            main_outs_by_repeat[cond].append(rep_outs[MAIN_VARIANT][cond]["ecerag"])
 
     cv = {"k_folds": K_FOLDS, "repeats": REPEATS, "main_variant": MAIN_VARIANT,
           "example_fold_params": fold_params, "baseline": {}, "variants": {}}
@@ -314,20 +329,37 @@ def analyze_run(run_dir, benchmark, grader):
     for cond in CONDITIONS:
         if by_cond[cond]:
             base = [run_system(r, "baseline", None) for r in by_cond[cond]]
-            cv["bootstrap_baseline_vs_main"][cond] = bootstrap_ci(base, first_repeat_outs[MAIN_VARIANT][cond]["ecerag"])
+            cv["bootstrap_baseline_vs_main"][cond] = bootstrap_ci(base, main_outs_by_repeat[cond])
     result["cv_protocol"] = cv
 
     # --- risk-coverage AUC (lower is better) for the score used as a selective-prediction ranking
-    def pool(score_of):
+    def pool(score_of, items=None):
         return [{"S": score_of(r), "question_answerable": r["answerable"],
-                 "correct_if_answered": r["graded"]["correct"]} for r in clean_by_qid.values()]
+                 "correct_if_answered": r["graded"]["correct"]} for r in (items or clean_by_qid.values())]
     errs = [not r["graded"]["correct"] for r in clean_by_qid.values()]
+    paper_S = lambda r: combine(r["signals"], DEFAULT_WEIGHTS)
+    fitted_S = lambda r: float(np.mean(oof_S[r["qid"]]))  # out-of-fold, averaged over repeats
+    # Same rankings restricted to questions the generator actually answered. G is 0 for every
+    # NOT_SUPPORTED reply and those count as errors, so on all items G partly gets credit for
+    # ranking the generator's own refusals last; this subset removes that advantage.
+    gen_answered = [r for r in clean_by_qid.values() if not r["graded"]["self_declined"]]
+    result["risk_coverage_auc_generator_answered_only"] = {
+        "n": len(gen_answered),
+        "paper_S_equal_RCAT": risk_coverage_auc(pool(paper_S, gen_answered)),
+        "cv_S_main_variant_out_of_fold": risk_coverage_auc(pool(fitted_S, gen_answered)),
+        "G_alone": risk_coverage_auc(pool(lambda r: r["signals"]["G"], gen_answered)),
+        **{f"{sig}_alone": risk_coverage_auc(pool(lambda r, sig=sig: r["signals"][sig], gen_answered))
+           for sig in ("R", "C", "A", "T")},
+        "random_ranking_expected": float(np.mean([not r["graded"]["correct"] for r in gen_answered]))
+        if gen_answered else None,
+        "paper_S_gain_over_random_ci95": auc_gain_ci(pool(paper_S, gen_answered)),
+    }
     result["risk_coverage_auc"] = {
         "paper_S_equal_RCAT": risk_coverage_auc(pool(lambda r: combine(r["signals"], DEFAULT_WEIGHTS))),
         "paper_S_equal_RCAT_test_split_only": risk_coverage_auc(
             [p for p, r in zip(pool(lambda r: combine(r["signals"], DEFAULT_WEIGHTS)), clean_by_qid.values())
              if r["qid"] in test_ids]),
-        "cv_S_main_variant_out_of_fold": risk_coverage_auc(pool(lambda r: oof_S[r["qid"]])),
+        "cv_S_main_variant_out_of_fold": risk_coverage_auc(pool(fitted_S)),
         "G_alone": risk_coverage_auc(pool(lambda r: r["signals"]["G"])),
         "random_ranking_expected": float(np.mean(errs)),
     }
@@ -387,6 +419,10 @@ def markdown_report(res):
         lines.append(f"| {cond} | {f2(b['a'])} | {f2(b['b'])} | {f2(b['b_minus_a'])} | {b['p_b_not_better']:.2f} |")
     auc = res["risk_coverage_auc"]
     lines += ["", "### Risk-coverage AUC (lower is better)", ""] + [f"- {k}: {fmt(v)}" for k, v in auc.items()]
+    sub = res["risk_coverage_auc_generator_answered_only"]
+    lines += ["", f"### Risk-coverage AUC on the {sub['n']} questions the generator answered (no credit for "
+              "ranking its own refusals)", ""] + [f"- {k}: {fmt(v) if not isinstance(v, list) else f'[{v[0]:.2f}, {v[1]:.2f}]'}"
+                                                 for k, v in sub.items() if k != "n"]
     pp = res["paper_protocol"]
     if not pp["params"]:
         return "\n".join(lines) + "\n"
