@@ -735,14 +735,14 @@
           },
           "ecerag_cr": {
             "n": 25.0,
-            "coverage": 0.6360000000000001,
-            "selective_risk": 0.28963935574229693,
-            "faithfulness": 0.758577072310181,
+            "coverage": 0.874,
+            "selective_risk": 0.229066985645933,
+            "faithfulness": 0.7710082012531573,
             "context_relevance": 0.20800000000000005,
             "abstention_precision": 0.0,
             "abstention_recall": null,
             "answer_in_context": 0.9600000000000002,
-            "n_errors": 4.6,
+            "n_errors": 5.0,
             "n_self_declined": 2.95
           }
         },
@@ -841,15 +841,15 @@
           },
           "ecerag_cr": {
             "n": 25.0,
-            "coverage": 0.5900000000000001,
-            "selective_risk": 0.29535148674854556,
-            "faithfulness": 0.7728926564817481,
+            "coverage": 0.8800000000000001,
+            "selective_risk": 0.2272727272727273,
+            "faithfulness": 0.7679234867456088,
             "context_relevance": 0.20800000000000005,
             "abstention_precision": 0.0,
             "abstention_recall": null,
             "answer_in_context": 0.9600000000000002,
-            "n_errors": 4.35,
-            "n_self_declined": 2.75
+            "n_errors": 5.0,
+            "n_self_declined": 3.0
           }
         },
         "counterfactual": {
@@ -947,14 +947,14 @@
           },
           "ecerag_cr": {
             "n": 25.0,
-            "coverage": 0.6140000000000001,
-            "selective_risk": 0.3032189991381168,
-            "faithfulness": 0.7497096317630978,
+            "coverage": 0.8800000000000001,
+            "selective_risk": 0.2272727272727273,
+            "faithfulness": 0.7679234867456088,
             "context_relevance": 0.20800000000000005,
             "abstention_precision": 0.0,
             "abstention_recall": null,
             "answer_in_context": 0.9600000000000002,
-            "n_errors": 4.65,
+            "n_errors": 5.0,
             "n_self_declined": 3.0
           }
         },
@@ -1053,14 +1053,14 @@
           },
           "ecerag_cr": {
             "n": 25.0,
-            "coverage": 0.558,
-            "selective_risk": 0.326668956043956,
-            "faithfulness": 0.7356058456807519,
+            "coverage": 0.874,
+            "selective_risk": 0.229066985645933,
+            "faithfulness": 0.7710082012531573,
             "context_relevance": 0.20800000000000005,
             "abstention_precision": 0.0,
             "abstention_recall": null,
             "answer_in_context": 0.9600000000000002,
-            "n_errors": 4.55,
+            "n_errors": 5.0,
             "n_self_declined": 2.95
           }
         },
@@ -1159,14 +1159,14 @@
           },
           "ecerag_cr": {
             "n": 25.0,
-            "coverage": 0.61,
-            "selective_risk": 0.30179379444085325,
-            "faithfulness": 0.7556650495128039,
+            "coverage": 0.874,
+            "selective_risk": 0.229066985645933,
+            "faithfulness": 0.7710082012531573,
             "context_relevance": 0.20800000000000005,
             "abstention_precision": 0.0,
             "abstention_recall": null,
             "answer_in_context": 0.9600000000000002,
-            "n_errors": 4.6,
+            "n_errors": 5.0,
             "n_self_declined": 2.95
           }
         },
@@ -1265,14 +1265,14 @@
           },
           "ecerag_cr": {
             "n": 25.0,
-            "coverage": 0.7660000000000001,
-            "selective_risk": 0.2504299965600275,
-            "faithfulness": 0.7707327346967692,
+            "coverage": 0.8800000000000001,
+            "selective_risk": 0.2272727272727273,
+            "faithfulness": 0.7679234867456088,
             "context_relevance": 0.20800000000000005,
             "abstention_precision": 0.0,
             "abstention_recall": null,
             "answer_in_context": 0.9600000000000002,
-            "n_errors": 4.8,
+            "n_errors": 5.0,
             "n_self_declined": 3.0
           }
         },

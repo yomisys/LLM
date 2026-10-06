@@ -12,7 +12,7 @@
 | irrelevant | ecerag_cr | 45% | 0.42 | 10.4 | 10.0 | 0.80 | 1.00 | 79% |
 | contradictory | baseline | 96% | 0.25 | 6.0 | 1.0 | 0.79 | – | 100% |
 | contradictory | ecerag | 0% | 0.00 | 0.0 | 0.0 | – | – | 100% |
-| contradictory | ecerag_cr | 21% | 0.37 | 1.9 | 0.4 | 0.78 | – | 96% |
+| contradictory | ecerag_cr | 62% | 0.30 | 4.7 | 1.5 | 0.80 | – | 96% |
 | counterfactual | baseline | 54% | 0.44 | 11.0 | 21.0 | 0.76 | 1.00 | 65% |
 | counterfactual | ecerag | 43% | 0.41 | 8.1 | 10.3 | 0.79 | 1.00 | 65% |
 | counterfactual | ecerag_cr | 46% | 0.43 | 9.2 | 10.4 | 0.77 | 1.00 | 73% |

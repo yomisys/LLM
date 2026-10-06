@@ -165,7 +165,9 @@ def run_system(r, system, p):
     if branch is None:
         return outcome(r, "abstain", r, S)
     S2 = combine(branch["signals"], p["weights"])
-    accept = decide(S2, branch["signals"], p) == "answer" and S2 >= S + p.get("cr_margin", 0.0)
+    accept = decide(S2, branch["signals"], p) == "answer"
+    if "cr_margin" in p:  # v2 only; the pilot's CR accepted any pass that cleared tau_A
+        accept = accept and S2 >= S + p["cr_margin"]
     o = outcome(r, "answer" if accept else "abstain", branch, S2)
     o["corrective_pass"] = True
     return o

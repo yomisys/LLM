@@ -2,6 +2,7 @@
   "run_dir": "results\\kaggle\\Qwen2.5-3B-Instruct",
   "grader": "judge",
   "n_questions": 60,
+  "has_round2": false,
   "run_config": {
     "generator": "Qwen/Qwen2.5-3B-Instruct",
     "counterfactual": "nearest",
