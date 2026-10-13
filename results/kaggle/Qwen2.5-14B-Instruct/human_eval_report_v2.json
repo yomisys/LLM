@@ -1,0 +1,18 @@
+{
+  "n_items": 100,
+  "n_annotators": 1,
+  "lexical_vs_human": {
+    "agreement": 0.79,
+    "kappa": 0.26056338028169007,
+    "false_positives": 4,
+    "false_negatives": 17
+  },
+  "judge_vs_human": {
+    "agreement": 1.0,
+    "kappa": 1.0,
+    "false_positives": 0,
+    "false_negatives": 0
+  },
+  "human_faithful_rate": 0.98,
+  "human_citation_ok_rate": 0.74
+}
