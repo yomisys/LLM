@@ -1,0 +1,23 @@
+{
+  "n_items": 100,
+  "n_annotators": 2,
+  "inter_annotator_kappa": {
+    "correct": 0.340478153338829,
+    "faithful": 0.22680412371134065,
+    "citation_ok": 0.801980198019802
+  },
+  "lexical_vs_human": {
+    "agreement": 0.77,
+    "kappa": 0.3405963302752294,
+    "false_positives": 11,
+    "false_negatives": 12
+  },
+  "judge_vs_human": {
+    "agreement": 0.88,
+    "kappa": 0.5652173913043477,
+    "false_positives": 12,
+    "false_negatives": 0
+  },
+  "human_faithful_rate": 0.96,
+  "human_citation_ok_rate": 0.72
+}

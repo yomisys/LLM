@@ -39,7 +39,7 @@ on a 60-question benchmark built from SEC filings, the NIST AI Risk Management F
 OWASP Top~10, and current/obsolete IETF specifications, under clean retrieval and three
 perturbations (irrelevant, contradictory, and outdated evidence), with five open-weight generators
 from 0.5B to 14B parameters, repeated cross-validation, paired bootstrap intervals, and two
-independent automatic graders checked against a human annotator. Relative to a RAG baseline that
+independent automatic graders validated against two human annotators. Relative to a RAG baseline that
 must always answer, ECERAG cuts the error rate on answered questions by roughly two-thirds (e.g.,
 0.43 to 0.13 at 7B; 0.40 to 0.11 at 14B). A controlled decomposition shows that this gain comes
 almost entirely from the generator's own evidence-grounded refusal: ECERAG is not significantly
@@ -83,8 +83,8 @@ held-out test item, and paired bootstrap confidence intervals (Sec.~\ref{sec:set
 a truly unconditional baseline and a gate-only system (Sec.~\ref{sec:decomp}).
 \item Evidence that the sufficiency score is a reliable \emph{ranking} signal for answer
 correctness across scales, even where thresholded gating adds little (Sec.~\ref{sec:ranking}).
-\item A human check of both automatic graders on 100 answers, which supports the LLM judge as
-the primary grader and bounds how small an effect the automatic grading can resolve
+\item A two-annotator human evaluation of 100 answers ($\kappa=0.70$), which supports the LLM
+judge as the primary grader and bounds how small an effect the automatic grading can resolve
 (Sec.~\ref{sec:human}).
 \end{enumerate}
 
@@ -417,19 +417,28 @@ $\tA=0.80$ for both 7B and 14B, giving zero errors at 26\% coverage against 0.13
 baseline: a conservative operating point that the cross-validated cost function does not choose.
 
 \subsection{Human Validation of the Graders}\label{sec:human}
-An annotator labeled 100 answers from the 14B generator, sampled across question types and all
-four evidence conditions (28 clean, 27 irrelevant, 23 outdated, 22 contradictory). The annotator
-was blind to the automatic grades and followed a written rubric that judges correctness against
-the gold answer, faithfulness against the evidence shown, and citations against the cited
-documents. In a first pass, the LLM judge agreed with the human on 91\% of answers (Cohen's
-$\kappa=0.52$; 5 lenient and 4 strict disagreements); a rubric-guided recheck of these 9
-disagreements resolved all of them in the judge's favor. The lexical grader agreed on 80\% ($\kappa=0.31$), mostly by
-rejecting 16 answers the human accepted, which confirms that it under-credits correct answers
-phrased differently from the gold text ($\kappa$ is depressed by the 89\% base rate of correct
-answers). The human found 98\% of answers faithful to the evidence but only 74\%
-correctly cited, mostly because the answer carried no citation at all (23 of the 26 failures). The reductions relative to unconditional
-RAG (about 0.30) are therefore not an artifact of grading. The smaller gate-only effects (at most
-0.11) remain the least certain result, because of sample size rather than grader error.
+Two annotators independently labeled 100 answers from the 14B generator, sampled across question
+types and all four evidence conditions (28 clean, 27 irrelevant, 23 outdated, 22 contradictory).
+Both were blind to the automatic grades and followed a written rubric
+that judges correctness against the gold answer, faithfulness against the evidence shown, and
+citations against the cited documents. Agreement on correctness was Cohen's $\kappa=0.34$ in a
+first pass. One annotator then rechecked 9 items flagged as inconsistent with the rubric; the second annotator's
+independent labels matched all 9 revised labels, and agreement rose to $\kappa=0.70$. Agreement
+was $\kappa=0.80$ on citations and $\kappa=0.23$ on faithfulness, where 96\% of answers were
+judged faithful and the few disagreements dominate $\kappa$.
+
+We take an answer as correct only if both annotators accept it (83 of 100). Against this
+consensus, the LLM judge agreed on 93\% of answers ($\kappa=0.70$) and the lexical grader on 76\%
+($\kappa=0.25$), the latter mostly by rejecting 15 accepted answers phrased differently from the
+gold text. All 7 of the judge's disagreements were lenient: it credited answers that covered only
+part of a multi-part question or used a superseded fiscal year. Of the 17 rejected answers, the
+second annotator's notes attribute 9 to a stale document version and 5 to incomplete multi-part
+answers. Only
+72\% of answers were correctly cited, almost always because the answer carried no citation at all
+(23 of 24 agreed failures). Two consequences follow. The judge's selective risk is optimistic by
+up to about 7 points on answered questions; this is far below the reductions relative to
+unconditional RAG (about 0.30), which are therefore not an artifact of grading. It is, however,
+comparable to the gate-only effects (at most 0.11), which remain the least certain result.
 
 \section{Discussion}
 \textbf{Implications.} For enterprise RAG, the most effective single control in our study is to
@@ -442,8 +451,8 @@ Fig.~\ref{fig:tradeoff} makes explicit.
 
 \textbf{Limitations.} The benchmark has 60 questions from six documents, so many intervals are
 wide; results may not transfer to other domains without recalibration. Correctness is graded
-automatically. The human check (Sec.~\ref{sec:human}) used a single annotator, so inter-annotator
-agreement is not measured, and it covers only the 14B model. Because that model declined all 16
+automatically; the LLM judge is somewhat lenient on incomplete answers (Sec.~\ref{sec:human}),
+and the human evaluation covers only the 14B model. Because that model declined all 16
 unanswerable questions, the sample contains none of them, so the grading of answers to
 unanswerable questions is not human-checked. Unanswerable questions were authored by us and may
 be easier to detect through self-refusal than those arising in practice. All generators come
@@ -455,11 +464,11 @@ is only one kind of real-world conflict.
 \section{Conclusion}
 Enterprise RAG should move from retrieve-then-generate to retrieve--assess--decide. In a
 controlled study across five generator sizes, ECERAG reduced the error rate on answered questions
-by roughly two-thirds relative to unconditional RAG, a result that a human check of the grading
-supports. Almost all of the reduction comes from grounded self-refusal by the generator; the
+by roughly two-thirds relative to unconditional RAG, a result that a two-annotator check of
+the grading supports. Almost all of the reduction comes from grounded self-refusal by the generator; the
 evidence-sufficiency gate adds a small, occasionally significant improvement, and its score
-reliably ranks answer correctness from 1.5B to 14B parameters. Future work will add a second
-annotator, another model family and more realistic unanswerable questions, and will use the
+reliably ranks answer correctness from 1.5B to 14B parameters. Future work will add another
+model family and more realistic unanswerable questions, and will use the
 sufficiency score to drive targeted retrieval rather than blanket abstention.
 
 \section*{Code and Data Availability}
